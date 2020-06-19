@@ -1,13 +1,12 @@
 
 import React, { useState, useEffect } from 'react'
-// 👉 STEP 2 - React Router imports
-import { Switch, Route, Link } from 'react-router-dom'
+import { Switch, Route, Link, useHistory } from 'react-router-dom'
 import './App.css';
-import axios from 'axios'
 import * as Yup from 'yup'
 import PizzaForm from './PizzaForm'
 import PizzaSchema from './PizzaSchema'
 import Pizza from './Pizza'
+import Home from './Home'
 
 const initialFormValues = {
   name: '',
@@ -22,6 +21,7 @@ const initialFormValues = {
     pineapple: false,
     mushrooms: false,
   },
+  specialInstructions: ''
 }
 
 const firstErrors = {
@@ -46,17 +46,15 @@ const firstDisabled = true;
 
 const App = () => {
   const [formValues, setFormValues] = useState(initialFormValues);
-  const [disabled, setdisabled] = useState(firstDisabled);
+  const [disabled, setDisabled] = useState(firstDisabled);
   const [error, setError] = useState(firstErrors);
-  const [pizzaOrder, setPizzaOrder] = useState(firstPizzaOrder);
-
-  // useEffect(() => {
-  //   fetchStock().then(res => setStock(res.data))
-  // }, [])
+  const [pizzaOrderList, setPizzaOrderList] = useState([firstPizzaOrder]);
+  const history = useHistory();
 
   const onInputChange = evt => {
     let { name, value } = evt.target;
-    Yup
+    if (name === 'name' || name === 'email') {
+      Yup
       .reach(PizzaSchema, name)
       //we can then run validate using the value
       .validate(value)
@@ -75,6 +73,7 @@ const App = () => {
           [name]: err.errors[0] // investigate
         })
       })
+    }
 
     setFormValues({
       ...formValues,
@@ -84,76 +83,65 @@ const App = () => {
 
   const onCheckboxChange = evt => {
     const { name, checked } = evt.target
-    Yup
-      .reach(PizzaSchema, name)
-      //we can then run validate using the value
-      .validate(checked)
-      // if the validation is successful, we can clear the error message
-      .then(() => {
-        setError({
-          ...error,
-          [name]: ""
-        });
-      })
-      /* if the validation is unsuccessful, we can set the error message to the message 
-        returned from yup (that we created in our schema) */
-      .catch(err => {
-        setError({
-          ...error,
-          [name]: err.errors[0] // investigate
-        })
-      })
-
+    console.log('onCheckboxChange: ' + name + ' checked: ' + checked);
+    const key = 'topping.' + name;
     setFormValues({
       ...formValues,
-      [name]: checked // NOT AN ARRAY
+      toppings: {
+        ...formValues.toppings,
+        [name]: checked
+      }
     })
+    console.log('formValues: ' + JSON.stringify(formValues));
   }
+
+  useEffect(() => {
+    const formValuesSubset = {
+      name: formValues.name, 
+      email: formValues.email
+    }
+    PizzaSchema.isValid(formValuesSubset).then(valid => {
+      console.log('valid: ' + valid);
+      setDisabled(!valid);
+    })
+  }, [formValues])
 
   const onSubmit = evt => {
     evt.preventDefault();
-    const newPizza = {
+    const newPizzaOrder = {
       ...formValues, ordered: true
     }
-    setPizzaOrder(newPizza);
+    setPizzaOrderList([...pizzaOrderList, newPizzaOrder]);
+    history.push('/');
+  }
 
-    useEffect(() => {
-      FormSchema.isValid(formValues).then(valid => {
-        console.log('valid: ' + valid);
-        setDisabled(!valid);
-      })
-    }, [formValues])
-
-    return (
-      <div className='App'>
-        <h1>Lambda Eats</h1>
+  return (
+    <div className='App'>
+      <h1>Lambda Eats</h1>
         <nav>
           <div className='nav-links'>
-            {/* 👉 STEP 3 - Make Links to navigate us Home (`/`) and Shop (`/items-list`) */}
-            <Link to='/'>Home</Link>
-            <Link to='/pizza'>Order Pizza</Link>
+            <Link style={{margin: '10px'}} to='/'>Home</Link>
+            <Link style={{margin: '10px'}} to='/pizza'>Order Pizza</Link>
           </div>
         </nav>
-        <Switch>
-          {/* With Route, if URL in Chrome matches the "path" prop we gave the Route, then, the nested renders */}
+        {/* With Route, if URL in Chrome matches the "path" prop we gave the Route, then, the nested renders */}
+      <Switch>
+        <Route path='/pizza'>
+          <PizzaForm
+            values={formValues}
+            change={onInputChange}
+            checkboxChange={onCheckboxChange}
+            submit={onSubmit}
+            disabled={disabled}
+            errors={error}
+          />
+        </Route>
 
-          <Route path='/pizza'>
-            <PizzaForm
-              values={formValues}
-              change={onInputChange}
-              checkboxChange={onCheckboxChange}
-              submit={onSubmit}
-              disabled={disabled}
-              errors={error}
-              pizzaOrder={pizzaOrder}
-            />
-          </Route>
-
-          <Route path="/">
-            <Home />
-          </Route>
-        </Switch>
-      </div>
-    );
-  };
+        <Route path="/">
+          <Home orders={pizzaOrderList}/>
+        </Route>
+      </Switch>
+    </div>
+  );
+}
   export default App;
