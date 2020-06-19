@@ -31,8 +31,15 @@ Commit your code regularly and meaningfully. This helps both you (in case you ev
 Demonstrate your understanding of this week's concepts by answering the following free-form questions. Edit this document to include your answers after each question.
 
 1. In 1-2 sentences, explain what React's `useRouteMatch` hook is used for.
+React's `useRouteMatch` hook is used for getting base url and path templates to add nested routes to an application such that a single parameter in the URL can be changed without having to change the whole thing in different files.
+
+
 1. How would you explain form validation to someone who has never programmed before?
+Users should have the best user experience by giving them informed feedback when they’ve filled out form incorrectly. This is done with form validation. Another popular method is to have a library such as Yup handle the validation - yup has built in methods to deal with email addresses, passwords, strings, numbers, and more. First install yup, declare schema and validate data. In a form app, the schema defines what the form looks like. It is kind of like a form outline, telling yup what the existing fields are and how they should be validated.
+
+
 1. In 1-2 sentences, define end to end testing.
+End to end testing looks at the entire user experience, from… start to finish.  End to end tests focus on UI and mimic how a user might interact with an app, simulating real events like button clicks, scrolls, form submits, and the like. End to end testing can be done by installind and using a great tool called cypress.
 
 ## Instructions
 
